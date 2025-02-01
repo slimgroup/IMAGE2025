@@ -1,2 +1,2 @@
 # IMAGE2025
-Image24 extended submissions
+Image25 extended submissions
