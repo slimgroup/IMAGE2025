@@ -16,7 +16,7 @@ website:
       contents:
       - section: "Abstracts"
         contents:
-        - file: Gahlot2025SEG/paper.qmd
+        - file: Gahlot2025SEG/abstract.qmd
           text: "Enhancing robustness of Digital Shadow"
     center:
       - file: license.qmd
