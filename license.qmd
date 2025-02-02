@@ -1,0 +1,10 @@
+---
+title: "License"
+---
+
+These abstracts are released under the Creative Commons License type [CC BY]. 2025 Copyrights (c) [SLIM Group], Georgia Institute of Technology.
+
+All codes used to produce these results are released under [MIT](./LICENSE) license.
+
+[CC BY]:https://creativecommons.org/licenses/by/4.0/
+[SLIM Group]:https://slim.gatech.edu

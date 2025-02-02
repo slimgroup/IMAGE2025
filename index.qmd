@@ -1,0 +1,11 @@
+---
+title: "Image2025"
+---
+
+This is a Quarto website.
+
+All submissions to the Image25 conference with additional figures, references, ...
+
+List of abstracts:
+
+- [DataAug](Gahlot2025SEG//abstract.qmd): Enhancing robustness of Digital Shadow

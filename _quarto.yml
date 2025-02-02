@@ -1,0 +1,45 @@
+project:
+  type: website
+
+website:
+  title: "Image2024"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+    right:
+      - icon: github
+        href: https://github.com/slimgroup
+  sidebar:
+      style: "docked"
+      search: true
+      contents:
+      - section: "Abstracts"
+        contents:
+        - file: GahlotLi2024SEG/paper.qmd
+          text: "A Digital Twin for Geological Carbon Storage with Controlled Injectivity"
+        - file: yin2024SEG/paper.qmd
+          text: "WISER: full-Waveform variational Inference via Subsurface Extensions with Refinements"
+        - file: Rex2024SEG/paper.qmd
+          text: "Velocity Continuation for Common Image Gathers"
+        - file: erdinc2024SEG/abstract.qmd
+          text: "Building subsurface velocity priors from field observations"
+        - file: Yunlin_Zeng2024SEG/paper.qmd
+          text: "Enhancing Full-Waveform Variational Inference through Stochastic Resampling and Data Augmentation"
+  page-footer:
+    center:
+      - file: license.qmd
+        text: "2024 Copyright (c) SLIM @ Georgia Institute of Technology"
+
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    css: styles.css
+    lightbox: True
+    toc: true
+    link-external-newwindow: True
+
+execute:
+  freeze: auto
