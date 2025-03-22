@@ -1,12 +1,6 @@
 ---
-title: "Enhancing robustness of Digital Shadow for CO~2~ Storage Monitoring with Augmented Rock Physics Modeling"
-author:
-  - name: Abhinav Prakash Gahlot
-    affiliations:
-      name: Georgia Institute of Technology
-  - name: Felix J. Herrmann
-    affiliations:
-      name: Georgia Institute of Technology
+title: "Rock Physics-Sensitivity-Aware Digital Shadow for CO~2~ Storage Monitoring"
+#author:
 bibliography: abstract.bib
 crossref:
   fig-prefix: figure
@@ -14,48 +8,103 @@ crossref:
 filters:
     - SLIM
 format:
-  # html:
-  #   page-layout: full
-  #   sidebar: false
-  #   lightbox: true
-  #   crossrefs-hover: true
+  html:
+    page-layout: full
+    sidebar: false
+    lightbox: true
+    crossrefs-hover: true
   pdf:
     template: IMAGEAbstractTemplate.latex
+    csl: apa.csl
     keep-tex: true
-abstract: We present an uncertainty-aware Digital Twin (DT) for geologic carbon storage (GCS), capable of handling multimodal time-lapse data and controlling CO~2~ injectivity to mitigate reservoir fracturing risks. In GCS, DT represents virtual replicas of subsurface systems that incorporate real-time data and advanced generative Artificial Intelligence (genAI) techniques, including neural posterior density estimation via simulation-based inference and sequential Bayesian inference. These methods enable the effective monitoring and control of CO~2~ storage projects, addressing challenges such as subsurface complexity, operational optimization, and risk mitigation. By integrating diverse monitoring data, e.g., geophysical well observations and imaged seismic, DT can bridge the gaps between seemingly distinct fields like geophysics and reservoir engineering. In addition, the recent advancements in genAI also facilitate DT with principled uncertainty quantification. Through recursive training and inference, DT utilizes simulated current state samples, e.g., CO~2~ saturation, paired with corresponding geophysical field observations to train its neural networks and enable posterior sampling upon receiving new field data. However, it lacks decision-making and control capabilities, which is necessary for full DT functionality. This study aims to demonstrate how DT can inform decision-making processes to prevent risks such as cap rock fracturing during CO~2~ storage operations.
+abstract: Geological Carbon Storage (GCS) requires precise CO~2~ plume monitoring to track potential leakage pathways, but time-lapse seismic imaging alone is insufficient. A recently developed Digital Shadows (DS) enhances forecasting using machine learning and Bayesian inference, yet their accuracy depends on assumed rock physics models, the mismatch of which can lead to unreliable predictions. Augmenting DS training with multiple rock physics models mitigates errors but averages over uncertainties, obscuring their sources. To overcome this, we introduce context-aware sensitivity analysis inspired by Amortized Bayesian Inference (ABI), allowing DS to learn explicit dependencies between seismic data, CO~2~ saturation, and rock physics models. This enables real-time adaptation to different rock physics assumptions at inference time rather than relying on costly retraining, thereby enhancing interpretability and decision-making for safer, more reliable CO~2~ storage.
 ---
 
-## Introduction
+::: {.hidden}
 
-Digital Twins refer to dynamic virtual replicas of subsurface systems, integrating real-time data and employing advanced generative Artificial Intelligence (genAI) methodologies, such as neural posterior density estimation via simulation-based inference [@doi:10.1073/pnas.1912789117] and sequential Bayesian inference [@papamakarios2019sequential;@kruse2021hint]. Thanks to combination of these advanced Bayesian inference techniques, our approach is capable of addressing challenges of monitoring and controlling CO~2~ storage projects. These challenges include dealing with the subsurface's complexity and heterogeneity (seismic and fluid-flow properties), operations optimization, and risk mitigation, e.g. via injection rate control. Because our Digital Twin is capable of handling diverse monitoring data, consisting of time-lapse seismic and data collected at (monitoring) wells, it entails a technology that serves as a platform to integrate seemingly disparate and siloed fields, e.g. geophysics and reservoir engineering. In addition, recent breakthroughs in genAI, allow Digital Twins to capture uncertainty in a principled way [@yu2023IMAGEmsc;@herrmann2023president;@gahlot2023NIPSWSifp]. By employing training and inference recursively, the Digital Twin trains its neural networks on samples of the simulated current state---i.e., the CO~2~ saturation/pressure, paired with simulated imaged seismic and/or data collected at (monitoring) wells. These training pairs of the simulated state and simulated observations are obtained by sampling the posterior distribution, $\mathbf{x}_{k-1}\sim p(\mathbf{x}_{k-1}\vert \mathbf{y}^\mathrm{o}_{1:k-1})$, at the previous timestep, $k-1$, conditioned on field data, $\mathbf{y}^\mathrm{o}_{1:k-1}$, collected over all previous timesteps, $1:k-1$, followed by advancing the state to the current timestep, followed by simulating (seismic/well) observations associated with that state. Given these simulated state-observation pairs, the Digital Twin's networks are trained, so they are current and ready to produce samples of the posterior when the new field data comes in---i.e. $\mathbf{x}_{k}\sim p(\mathbf{x}_{k}\vert \mathbf{y}^\mathrm{o}_{1:k})$. While this new neural approach to data assimilation for CO~2~ storage projects provides what is called an uncertainty-informed *Digital Shadow*, it lacks decision making and control, which would make it a Digital Twin [@thelen2022comprehensivea], capable of optimizing storage operations while mitigating risks including the risk of fracturing the cap rock by exceeding the fracture pressure. The latter risk is illustrated in Figure 1, where the first row contains simulated samples of the pressure difference at timestep $k=4$, between the reservoir pressure and hydraulic pressure, without control. These samples for the simulated state exceed the fracture pressure and are denoted by the red areas.  This manuscript will demonstrate how the Digital Twin can make informed decisions to avoid exceeding the fracture pressure.
+\newcommand{\argmin}{\mathop{\mathrm{argmin}\,}\limits}
+\newcommand{\argmax}{\mathop{\mathrm{argmax}\,}\limits}
+$$
+\def\textsc#1{\dosc#1\csod} 
+\def\dosc#1#2\csod{{\rm #1{\small #2}}} 
+$$
 
-
-## Methodology
-
-To make uncertainty informed decisions on adapting the injection rate, 128 samples of the state (see second row Figure 1), $\{\mathbf{x}^{(m)}_{3}\}_{m=1}^{128}$, and permeability, $\{K^{(m)}\}_{m=1}^{128}$, are drawn at time-step $k=3$ from the posterior distribution, $\mathbf{x}_{3}\sim p(\mathbf{x}_{3}\vert \mathbf{y}^\mathrm{o}_{1:3})$, for the state conditioned on the observed time-lapse data, and from the distribution for the permeability, $K\sim p(K)$. To find the optimized injection rate, we first calculate for each sample, $K$ and $\mathbf{x}^{(m)}_{3}$, the optimized injectivity by $\max_{q_3} q_3\Delta t \ \ \text{subject to} \ \ \mathbf{x}_{4}['p']<\mathbf{p}_{\max}$ where $\mathbf{p}_{\max}$ is the depth-dependent fracture pressure, and $\mathbf{x}_{4}=\mathcal{M}_3(\mathbf{x}_{3}, \mathbf{K}; q_3)$ the state's time-advancement denoted by the symbol $\mathcal{M}_3$. For the fluid-flow simulations, the open-source Julia package [JUDI.jl](https://github.com/slimgroup/JUDI.jl) and [JutulDarcy.jl](https://github.com/sintefmath/JutulDarcy.jl) are used. Results of these optimizations are included in Figure 2(a), which contains a histogram of the empirical fracture frequency as a function of injection rates at time $k=3$. Given this histogram, our task is to maximize the injection rate given a pre-defined confidence interval (e.g. 95 %), so that the fracture probability remains below a certain percentage e.g. 1%.  With these simulations, and the fact that fracture/no-fracture occurrences are distributed according to the Bernoulli distribution, we will demonstrate that we are able to select an injection rate that limits fracture occurrence to the prescribed probability with a prescribed confidence interval. For instance, we can compute $Pr([\mathbf{x}_4['p']>p_{\max}]<0.01)<1-0.025$, which corresponds to selecting an injection rate that leads to fracture rate of $<1\%$ with $97.5\%$ confidence. The confidence interval is halved, because only conservative (left) injection rates will be selected (see Figure 2(b)).
-
-
-## Results
-
-To calculate injection rates that mitigate the risk of exceeding the fracture pressure, we proceed as follows. First, because the optimized injection rates are close to the fracture pressure, we consider these optimization as approximations to the injection rates where the fracture pressure are exceeded. Next, Kernel Density Estimation (KDE) is applied to produce the smooth red curve in Figure 2(a). This smoothed probability function is used to calculate the Cumulative Density Function (CDF), plotted in Figure 2(b). Using the fact that non-fracture/fracture occurrence entails a Bernoulli distribution, confidence intervals can be calculated, $\pm Z_{\frac{\alpha}{2}} \sqrt{\frac{\hat{p}(1 - \hat{p})}{128}}$ where $\hat{p}$ represents the CDF (blue line) and $Z_{\frac{\alpha}{2}}=1.96$ with $\alpha=0.05$. From the CDF and confidence intervals (denoted by the grey areas), the following conclusions can be drawn: First, if the initial injection rate of $q_3 = 0.0500 m^3/s$ is kept, the fracture probability lies between 24.47 -- 40.71% (vertical dashed line) and has a maximum likelihood of 32.59%, which are all way too high. Second, if we want to limit the fracture occurrence rate to 1% (red dashed line), then we need to lower the injection rate to $q_3=0.0387\mathrm{m^3/s}$. To ensure the low fracture occurrence rate of 1%, the reduced injection rate is chosen as the smallest injection rate within the confidence interval. As can be observed from Figure 1 (third row) and Figure 2(b), lowering the injection rate avoids exceeding the fracture pressure at the expense of injecting less CO~2~. Out of 128 samples, 43 samples are fractured with the initial injection rate, while only one sample is fractured with the controlled injection rate. 
-
-## Conclusion and discussion
-
-We illustrate how Digital Twins can be used to mitigate risks associated with CO~2~ storage projects. Specifically, we used the Digital Twin's capability to produce samples of its state (pressure), conditioned on observed seismic and/or well data. Using these samples, in conjunction with samples from the permeability distribution, we were able to capture statistics on the fracture occurrence frequency as a function of the injection rate. Given these statistics, we set a fracture frequency and choose the corresponding injection rate as a function of the confidence interval. By following this procedure, exceeding the fracture pressure was avoided by lowering the injection rate. The decision to lower the injection rate, and by which amount, was informed by the Digital Twin, which uses seismic and/or well data to capture reservoir's state including its uncertainty.
-
-::: {#fig-flow}
-![](./figs/Figure1.png){width="90%"}
-
-Pressure state at time-step $k=3$ (second row) and a comparative analysis of pressure outputs (first and third) from the digital twin at time-step $k=4$
 :::
 
-::: {#fig-fracture}
-![](./figs/Figure2.png){width="90%"}
+# Introduction
 
-Injection rate samples and KDE curve(a), CDF curve of fracture probability versus injection rate with 95% confidence interval(b)
+The critical challenge of reducing global greenhouse gas emissions to mitigate anthropogenic climate change calls for the need for engineered geological carbon storage (GCS). Since the industrial revolution, the extensive combustion of fossil fuels has significantly increased atmospheric CO2 ~ concentrations, contributing to global warming [@ringrose2020store]. Despite growing efforts to transition towards renewable energy sources, the current global energy system remains heavily reliant on fossil fuels, particularly in power generation, manufacturing, and transportation [@IEA_2016]. Given the intermittency of renewable energy and the scale of emissions reduction required, an integrated approach combining multiple mitigation strategies is necessary. GCS plays a vital role in this transition by providing a means to decarbonize existing energy infrastructure and industrial processes while enabling negative emissions when coupled with bioenergy [@ringrose2020store;@masson2018global]. Furthermore, GCS facilitates a more cost-effective and timely reduction in emissions compared to relying solely on renewable energy expansion [@iiasa14349; @ringrose2020store; @IEA_2016]. However, to align with the targets set by the Paris Agreement [@COP21_2015], the deployment of GCS must be significantly scaled up, necessitating advancements in geological CO~2~ storage technologies and the expansion of large-scale storage facilities [@GCCSI_2019]. This necessitates precise monitoring of subsurface CO~2~ dynamics to ensure that CO~2~ plumes remain confined within the intended storage formations, preventing migration into adjacent strata [@ringrose2023storage] and ultimately avoiding release into the atmosphere. While time-lapse seismic imaging is essential for monitoring CO~2~ plume migration, it often lacks the resolution to fully characterize the complexities of multi-phase subsurface flow.
+
+Digital Shadows (DS), powered by machine learning-driven data assimilation techniques such as nonlinear Bayesian filtering and generative AI [@spantini2022coupling; @gahlot2024uads], offer a high-fidelity approach to characterize subsurface CO~2~ flow [@herrmann2023president; @gahlot2023NIPSWSifp; @gahlot2024uads]. By incorporating uncertainty in reservoir properties such as permeability, DS provides uncertainty-aware CO~2~ migration forecasts, including predictions of plume pressure and saturation, thereby reducing risks in geological carbon storage (GCS) projects by enabling decision-making.
+
+However, the accuracy of these forecasts depends on assumptions regarding reservoir properties, rock physics models, and initial conditions. If these assumptions are inaccurate, predictions can become unreliable, compromising GCS safety. @gahlot2025erd showed that when a DS is trained assuming a particular rock physics model and evaluated with a different rock physics, it outputs an incorrect plume prediction. To address this challenge, @gahlot2025erd proposed augmenting the forecast ensemble used for training neural networks in the data assimilation process. By incorporating multiple rock physics models ranging from patchy to uniform saturation, their approach mitigates the impact of model misspecification and enhances predictive accuracy in key scenarios.
+
+While this approach marginalizes over plausible rock physics models, it loses its capability for explicit reasoning. By producing a marginal posterior, the plume predictions become averaged across all possible rock physics models, resulting in broader uncertainty bounds, which can obscure the true source of uncertainty and complicate decision-making. Without an explicit treatment of rock physics variability, it becomes unclear whether uncertainties arise due to seismic noise, uncertain permeability, or incorrect assumptions about the rock physics model itself. This lack of interpretability can reduce confidence in monitoring and forecasting CO~2~ plume behavior in geological storage settings.
+
+To circumvent this, we need a framework that enables sensitivity analysis of the Digital Shadow over a range of rock physics models. However, training a separate network for each rock physics model is infeasible, as retraining is costly and data-intensive. Traditionally, sensitivity analyses have relied on computationally expensive refitting procedures, where a new model is trained for each specific configuration, limiting scalability and generalization in real-world monitoring scenarios. @elsemuller2024sensitivityaware demonstrates that Amortized Bayesian Inference (ABI) [@radev2020bayesflow] provides a principled way to assess the sensitivity of model predictions without requiring separate network training for each context. ABI not only enables rapid inference across unseen datasets but also facilitates systematic uncertainty quantification by incorporating context variables into the neural network. These context variables allow the model to learn a context-aware conditional posterior, thereby capturing the dependence of inferred parameters on different forward model assumptions. This allows for a faster and more structured approach to sensitivity analysis, where the impact of different rock physics models, in the case of DS, can be assessed directly at inference time rather than through costly retraining.
+
+Motivated by this, we extend the approach in @gahlot2025erd by incorporating explicit rock physics sensitivity analysis within the DS framework. Instead of training separate models for different rock physics configurations, we introduce context variables representing the rock physics model into the training process. This allows the network to learn an explicit mapping between seismic data, CO~2~ saturation, and the rock physics model, thereby improving robustness, interpretability, and generalization. By including rock physics as a context variable, we perturb seismic images corresponding to CO~2~ saturation forecasts in the training ensembles in a structured manner. This ensures that the DS can dynamically adapt to different rock physics models during inference rather than producing a posterior smeared over all possible models. As a result, our approach enables not only uncertainty quantification over CO~2~ plume forecasts but also a direct assessment of how different rock physics assumptions affect CO~2~ plume prediction results, enhancing decision-making for geological carbon storage monitoring.
+
+# Methodology
+
+Building upon the uncertainty-aware Digital Shadow (DS) framework introduced in [@gahlot2024uads], we develop a Bayesian inference-driven approach for tracking CO~2~ plume evolution in geological storage reservoirs. The temporal dynamics of CO~2~ saturation and pressure perturbations are modeled as:
+
+$$
+\begin{aligned}
+\mathbf{x}_k & = \mathcal{M}_k\bigl(\mathbf{x}_{k-1}, \boldsymbol{\kappa}_k\bigr), \ \boldsymbol{\kappa}_k \sim p(\boldsymbol{\kappa}) \quad \text{for}\quad k=1, \dots, K.
+\end{aligned}
+$$ {#eq-dynamics}
+
+where $\mathbf{x}_k$ represents the CO~2~ saturation and pressure perturbations at time step $k$, governed by the multi-phase fluid flow operator $\mathcal{M}_k$. The permeability field $\boldsymbol{\kappa}$, which plays a crucial role in CO~2~ migration and storage efficiency, is inherently uncertain due to subsurface heterogeneity [@ringrose2020store]. To account for this uncertainty, we model permeability as a random variable drawn from a probability distribution $p(\boldsymbol{\kappa})$. This ensures that the simulation framework can generate a diverse set of plausible CO~2~ migration scenarios, capturing the inherent variability of geological formations.
+
+While fluid flow simulations provide physically consistent plume dynamics, they remain impractical without observational constraints due to the inherent stochasticity of permeability and the uncertainty in rock physics models. Time-lapse seismic imaging [@lumley20104d] serves as a key monitoring tool, providing indirect observations of CO~2~ plume migration. The corresponding observation model is defined as:
+
+$$
+\mathbf{y}_k = \mathcal{H}_k(\mathbf{x}_k;\mathcal{R}_k) + \boldsymbol{\epsilon}_k, \quad \boldsymbol{\epsilon}_k \sim p(\boldsymbol{\epsilon}), \quad \mathcal{R}_k \sim p(\mathcal{R}) \quad \text{for}\quad k=1, \dots, K
+$$ {#eq-obs}
+
+where $\mathbf{y}_k$ represents the seismic data recorded at time $t_k$, $\mathcal{H}_k$ is the seismic forward operator, and $\boldsymbol{\epsilon}_k$ is the colored Gaussian noise added to the seismic shot records before reverse-time migration and accounts for uncertainties in wave propagation and measurement errors. The term $\mathcal{R}_k$ corresponds to the rock physics transformation, which links fluid flow properties to seismic attributes. To account for uncertainty in rock physics, we sample $\mathcal{R}_k$ from a family of Brie Saturation models, with the exponent $e$ uniformly drawn from the range $e \sim \mathcal{U}(1,10)$. This exponent brings a context-aware data augmentation strategy that ensures that seismic images reflect a spectrum of plausible rock physics assumptions. To infer the posterior distribution of CO~2~ plume states from seismic data and the context, we employ Conditional Normalizing Flows (CNFs, [@nf; @gahlot2024uads]) within a simulation-based inference framework utilizing the training pairs of CO~2~ plume states and corresponding seismic images by varying both permeability and rock physics models (cf. equations [-@eq-dynamics] and [-@eq-obs]). This results in a richly augmented training set, where multiple seismic realizations are generated along with their contexts for each plume sample. The CNF approximates the posterior distribution $p(\mathbf{x}_k | \mathbf{y}_k)$, allowing for real-time Bayesian updates as new seismic data become available. This approach marries sequential Bayesian inference with neural posterior density estimation, leveraging deep generative models for rock physics context-aware CO~2~ plume forecasting.
+
+# Synthetic Case Study
+
+To assess the proposed methodology, we utilize a synthetic 2D Earth model derived from the Compass model [@BG], which is representative of geological formations in the North Sea region. A subset of this model, containing key subsurface structures suitable for CO~2~ injection, is selected and discretized into a computational grid of $512 \times 256$ with a spatial resolution of $6.25 \ \mathrm{m}$. The initialization of the DS requires an ensemble of potential CO~2~ plume scenarios, which depend on the inherent uncertainty in the permeability distribution of the storage reservoir. To account for this variability, we establish a probabilistic baseline velocity model, inferred through full-waveform inversion [@yin2024wise] under the assumption of a baseline seismic survey conducted before CO~2~ injection. The resulting samples of the velocity distribution are then converted into permeability samples using an empirical transformation elucidated in @gahlot2024uads.
+
+## Multi-Phase Flow Simulations
+
+Flow simulations are conducted using the open-source tool JutulDarcy JutulDarcy.jl [@jutuldarcy]. In the initial setup, the reservoir is filled with brine, and supercritical CO~2~ is injected at a constant rate of $0.0500 \ \mathrm{m^3/s}$ for 1920 days. The injection occurs at an approximate depth of $1200 \ \mathrm{m}$. The simulation is performed over four time-lapse intervals, denoted as $t_k$, generating predicted CO~2~ saturation values for each of the $N=128$ ensemble members at every timestep.
+
+## Context-Augmented Seismic Simulations
+
+The outputs from the 128 flow simulations are translated into changes in subsurface acoustic properties through the application of 6 different contexts (exponent of the Brie Saturation model [@avseth2010quantitative]). This approach effectively augments the dataset by a factor of six, generating distinct acoustic changes for each seismic simulation. The seismic surveys are conducted using 8 receivers and 200 sources, with a dominant frequency of 15 Hz and a recording duration of 1.8 seconds. To simulate real-world conditions, 28 dB SNR colored Gaussian noise is added to the shot records. Nonlinear wave simulations and imaging are performed using the open-source package [JUDI.jl](https://github.com/slimgroup/JUDI.jl)[@witte2018alf; @JUDI], after incorporating various rock physics models.
+
+## CNF Training
+
+The training dataset consists of $768$ ensemble members, each consisting of a forecasted CO~2~ plume, its corresponding seismic observations, and the context. A Conditional Normalizing Flow (CNF) is trained using the open-source package InvertibleNetworks.jl [@orozco2023invertiblenetworks]. To avoid retraining neural approximators for each context, we incorporate the context $C$ into the network’s amortization framework. This context $C$ corresponds to an embedding of the Brie saturation exponent $e$. We integrate this context into the standard negative log-posterior objective of the CNF, represented as, $\mathbb{E}_{\mathbf{x} \sim q_{\phi}(\mathbf{x} | \mathbf{y}, C)} \left[ - \log q_{\phi}(\mathbf{x} | \mathbf{y}, C) \right]$, and is evaluated using the samples of the approximate surrogate distribution $q_{\phi}$. To achieve the required amortization over a set of context variables C, which is obtained from the Brie exponent $e \sim \mathcal{U}(1,10)$, we minimize the context-aware (CA) loss, $\mathbb{E}_{e \sim P(e)} \left[ \mathbb{E}_{(\mathbf{x} \sim q_{\phi}(\mathbf{x} | \mathbf{y}, C)} \left[ - \log q_{\phi}(\mathbf{x} | \mathbf{y}, C) \right] \right]$, where the outer expectation is evaluated using the samples of $e$. Following @gahlot2024uads, all of these boils down to training a CNF where the network parameters $\boldsymbol{\phi}$ are optimized by minimizing the following objective function over 300 epochs, utilizing the $\textsc{ADAM}$ optimizer [@Kingma2014AdamAM]:
+$$
+\widehat{\boldsymbol{\phi}} = \argmin_{\boldsymbol{\phi}} \frac{1}{M}\sum_{m=1}^M \Biggl(\frac{\Big\|f_{\boldsymbol{\phi}}(\mathbf{x}^{(m)};(\mathbf{y}^{(m)},C^{(m)}))\Big\|_2^2}{2} - \log\Bigl |\det\Bigl(\mathbf{J}^{(m)}_{f_{\boldsymbol{\phi}}}\Bigr)\Bigr |\Biggr).
+$$ {#eq-loss-CNF}
+
+where $\mathbf{J}$ is the Jacobian of the network $f_{\theta}$ with respect to its input, and $M$ is the number of training samples. For further details, we refer to [@gahlot2024uads].
+
+# Results
+
+The performance of our enhanced Digital Shadow framework, incorporating rock physics, is shown in @fig-sup. The top row in each figure presents, from left to right, the ground truth (GT) CO~2~ plume, the conditional mean of the posterior samples, and a sample from the posterior. The bottom row displays, from left to right, the seismic observation, the error between the conditional mean and the ground truth, and the uncertainty. As shown in @fig-naug-idy, the non-augmented DS performs well when the seismic observation matches the correct rock physics model, with the conditional mean closely approximating the GT. However, performance degrades when the seismic observation is based on a different, unknown rock physics model, as seen in @fig-naug-oody, where the conditional mean deviates from the GT, leading to increased error and uncertainty. Augmenting the ensemble improves generalization when seismic observations are based on an unknown rock physics model, as demonstrated in @fig-aug-oody. In this case, the conditional mean is closer to the GT, and both error and uncertainty are reduced compared to the non-augmented approach.
+
+::: {#fig-sup layout-nrow=3}
+
+
+Caption
+
 :::
 
-## References
+# Conclusions
+
+This study demonstrates that uncertainties in permeability and rock physics models can significantly impact the accuracy of CO~2~ plume predictions. By augmenting the forecast ensemble, DS is able to account for unknown rock physics models (at least within the family of Brie saturation models where the exponent $e$ is not specified) and fluid-flow properties. The enriched dataset improves the fidelity of CO~2~ plume forecasts, thereby enhancing the reliability of GCS monitoring.
+
+# Acknowledgement
+This research was carried out with the support of Georgia Research Alliance, partners of the ML4Seismic Center and in part by the US National Science Foundation grant OAC 2203821. The overall readability is enhanced using ChatGPT 4. 
+
+# References {.unnumbered}
 
 ::: {#refs}
 :::
