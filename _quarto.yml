@@ -18,9 +18,9 @@ website:
         contents:
         - file: Gahlot2025SEG/abstract.qmd
           text: "Enhancing robustness of Digital Shadow"
-    center:
-      - file: license.qmd
-        text: "2025 Copyright (c) SLIM @ Georgia Institute of Technology"
+        center:
+        - file: license.qmd
+          text: "2025 Copyright (c) SLIM @ Georgia Institute of Technology"
 
 format:
   html:
